@@ -12,7 +12,7 @@
 
 #define TAG "BarCodeScanner"
 #define WORKER_TAG TAG "Worker"
-#define FILE_BUFFER_LEN 16
+#define FILE_BUFFER_LEN 1
 
 #define SCRIPT_STATE_ERROR (-1)
 #define SCRIPT_STATE_END (-2)
@@ -36,7 +36,7 @@ struct BarCodeScript {
     FuriString* file_path;
     uint32_t defdelay;
     FuriThread* thread;
-    uint8_t file_buf[FILE_BUFFER_LEN + 1];
+    uint8_t file_buf[FILE_BUFFER_LEN];
     uint8_t buf_start;
     uint8_t buf_len;
     bool file_end;
@@ -85,19 +85,18 @@ static int32_t bc_scanner_worker(void* context){
     BarCodeWorkerState worker_state = BarCodeStateInit;
     int32_t delay_val = 0;
     UNUSED(delay_val);
-    UNUSED(is_bc_end);
     File* script_file = storage_file_alloc(furi_record_open(RECORD_STORAGE));
 
     FURI_LOG_I(WORKER_TAG, "Init");
-    uint8_t buff[5] = {'p', 'r', 'i', 'v', 'k'};
-    uint8_t state = 99;
+    //uint8_t buff[5] = {'p', 'r', 'i', 'v', 'k'};
+    //uint8_t state = 99;
 
     usb_uart_serial_init();
     
     while (1)
     {
-            state = furi_hal_cdc_get_ctrl_line_state(FuriHalUartIdUSART1);
-            FURI_LOG_I(WORKER_TAG, "STATTE: %d", state);
+            //state = furi_hal_cdc_get_ctrl_line_state(FuriHalUartIdUSART1);
+            //FURI_LOG_I(WORKER_TAG, "STATTE: %d", state);
         if (worker_state == BarCodeStateInit)
         {
            if(storage_file_open(
@@ -131,9 +130,26 @@ static int32_t bc_scanner_worker(void* context){
                 worker_state = BarCodeStateIdle; // Ready to run
             } else if(flags & WorkerEvtToggle) {
                 FURI_LOG_I(WORKER_TAG, "SendUART_MSG");
-                furi_hal_cdc_send(0, buff, sizeof (buff));
+                uint16_t ret = 0;
+                 do {
+                    ret = storage_file_read(script_file, bc_script->file_buf, FILE_BUFFER_LEN);
+                    if (is_bc_end((char)bc_script->file_buf[0]))
+                    {
+                        bc_script->st.line_nb++;
+                        break;
+                    }
+                    
+                    furi_hal_cdc_send(0, bc_script->file_buf, FILE_BUFFER_LEN);
+                    furi_delay_ms(10);
+                    if(storage_file_eof(script_file)) {
+                        bc_script->st.line_nb++;
+                        break;
+                    }
+                 }while (ret > 0);
+                 
                 worker_state = BarCodeStateIdle;
                 bc_script->st.state = BarCodeStateDone;
+                storage_file_seek(script_file, 0, true);
                 continue;
             }
             bc_script->st.state = worker_state;
@@ -173,6 +189,7 @@ void bc_scanner_script_close(BarCodeScript* bc_script) {
     furi_thread_free(bc_script->thread);
     furi_string_free(bc_script->file_path);
     free(bc_script);
+    FURI_LOG_D(WORKER_TAG, "bc_scanner_script_close");
 }
 
 void bc_scanner_script_toggle(BarCodeScript* bc_script) {

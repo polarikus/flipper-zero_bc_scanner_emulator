@@ -137,7 +137,7 @@ void bc_scanner_free(BarCodeView* bar_code) {
     furi_assert(bar_code);
     view_free(bar_code->view);
     free(bar_code);
-    FURI_LOG_I(WORKER_TAG, "Free");
+    FURI_LOG_D(WORKER_TAG, "bc_scanner_free");
 }
 
 View* bc_scanner_get_view(BarCodeView* bar_code) {
