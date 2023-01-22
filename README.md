@@ -16,13 +16,13 @@
 ### App icon and name
 ![Screenshot](https://gitlab.idcloud.space/flipper-zero/bc_scanner_e/-/wikis/uploads/4c4fabf431947ef31a6e4e8103154b0f/icon.png)
 ### File Select
-After open app - select bar code to be emulated
+After open app - select bar code to be emulated</br>
 ![Screenshot](https://gitlab.idcloud.space/flipper-zero/bc_scanner_e/-/wikis/uploads/a03a1fa3e8bea95510eca7e10af5b5cd/catalog.png)
 ### Emulation
-1. Click "Run" Button \
-![Screenshot](https://gitlab.idcloud.space/flipper-zero/bc_scanner_e/-/wikis/uploads/2b6144eebd5e88caa8adc5e0c7514342/Runing.png) \
-When sending completed You will see 100% on the display: 
-   ![Screenshot](https://gitlab.idcloud.space/flipper-zero/bc_scanner_e/-/wikis/uploads/676d868d7c377ef9d0f42706bcd83913/EndRun.png)
+1. Click "Run" Button</br>
+![Screenshot](https://gitlab.idcloud.space/flipper-zero/bc_scanner_e/-/wikis/uploads/2b6144eebd5e88caa8adc5e0c7514342/Runing.png)</br>
+When sending completed You will see 100% on the display:</br>
+   ![Screenshot](https://gitlab.idcloud.space/flipper-zero/bc_scanner_e/-/wikis/uploads/676d868d7c377ef9d0f42706bcd83913/EndRun.png)</br>
 2. If you need to resend, click "Run" again 
 3. To exit - press the "Back" button on the flipper
 
