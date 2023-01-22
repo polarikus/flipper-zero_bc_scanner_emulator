@@ -36,3 +36,5 @@ When sending completed You will see 100% on the display:
 2. Add a barcode in any format, such as GS1 format
 3. Save file and change extension on .bc
 4. Copy file in Flipper SDCard, to "/bcscanner" folder
+
+File example [test_evotor.bc](https://gitlab.idcloud.space/flipper-zero/bc_scanner_e/-/wikis/uploads/bfcf94d5c6510ec051369b077b8e94a1/test_evotor.bc)
