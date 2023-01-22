@@ -4,6 +4,8 @@
 #include <assets_icons.h>
 
 #define MAX_NAME_LEN 64
+#define TAG "BcScanner"
+#define WORKER_TAG TAG "View"
 
 struct BarCodeView {
     View* view;
@@ -18,7 +20,6 @@ typedef struct {
 } BarCodeModel;
 
 
-/*
 static void bc_scanner_draw_callback(Canvas* canvas, void* _model) {
     BarCodeModel* model = _model;
 
@@ -31,23 +32,18 @@ static void bc_scanner_draw_callback(Canvas* canvas, void* _model) {
 
     canvas_draw_icon(canvas, 22, 20, &I_UsbTree_48x22);
 
-    if((model->state.state == BadUsbStateIdle) || (model->state.state == BadUsbStateDone)) {
+    if((model->state.state == BarCodeStateIdle) || (model->state.state ==  BarCodeStateDone)) {
         elements_button_center(canvas, "Run");
-    } else if((model->state.state == BadUsbStateRunning) || (model->state.state == BadUsbStateDelay)) {
+    } else if((model->state.state ==  BarCodeStateRunning) || (model->state.state ==  BarCodeStateDelay)) {
         elements_button_center(canvas, "Stop");
     }
 
-    if(model->state.state == BadUsbStateNotConnected) {
-        canvas_draw_icon(canvas, 4, 22, &I_Clock_18x18);
-        canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str_aligned(canvas, 127, 27, AlignRight, AlignBottom, "Connect");
-        canvas_draw_str_aligned(canvas, 127, 39, AlignRight, AlignBottom, "to USB");
-    } else if(model->state.state == BadUsbStateFileError) {
+    if(model->state.state ==  BarCodeStateFileError) {
         canvas_draw_icon(canvas, 4, 22, &I_Error_18x18);
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str_aligned(canvas, 127, 27, AlignRight, AlignBottom, "File");
         canvas_draw_str_aligned(canvas, 127, 39, AlignRight, AlignBottom, "ERROR");
-    } else if(model->state.state == BadUsbStateScriptError) {
+    } else if(model->state.state ==  BarCodeStateScriptError) {
         canvas_draw_icon(canvas, 4, 22, &I_Error_18x18);
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str_aligned(canvas, 127, 33, AlignRight, AlignBottom, "ERROR:");
@@ -57,12 +53,12 @@ static void bc_scanner_draw_callback(Canvas* canvas, void* _model) {
             canvas, 127, 46, AlignRight, AlignBottom, furi_string_get_cstr(disp_str));
         furi_string_reset(disp_str);
         canvas_draw_str_aligned(canvas, 127, 56, AlignRight, AlignBottom, model->state.error);
-    } else if(model->state.state == BadUsbStateIdle) {
+    } else if(model->state.state ==  BarCodeStateIdle) {
         canvas_draw_icon(canvas, 4, 22, &I_Smile_18x18);
         canvas_set_font(canvas, FontBigNumbers);
         canvas_draw_str_aligned(canvas, 114, 36, AlignRight, AlignBottom, "0");
         canvas_draw_icon(canvas, 117, 22, &I_Percent_10x14);
-    } else if(model->state.state == BadUsbStateRunning) {
+    } else if(model->state.state ==  BarCodeStateRunning) {
         if(model->anim_frame == 0) {
             canvas_draw_icon(canvas, 4, 19, &I_EviSmile1_18x21);
         } else {
@@ -75,13 +71,13 @@ static void bc_scanner_draw_callback(Canvas* canvas, void* _model) {
             canvas, 114, 36, AlignRight, AlignBottom, furi_string_get_cstr(disp_str));
         furi_string_reset(disp_str);
         canvas_draw_icon(canvas, 117, 22, &I_Percent_10x14);
-    } else if(model->state.state == BadUsbStateDone) {
+    } else if(model->state.state ==  BarCodeStateDone) {
         canvas_draw_icon(canvas, 4, 19, &I_EviSmile1_18x21);
         canvas_set_font(canvas, FontBigNumbers);
         canvas_draw_str_aligned(canvas, 114, 36, AlignRight, AlignBottom, "100");
         furi_string_reset(disp_str);
         canvas_draw_icon(canvas, 117, 22, &I_Percent_10x14);
-    } else if(model->state.state == BadUsbStateDelay) {
+    } else if(model->state.state ==  BarCodeStateDelay) {
         if(model->anim_frame == 0) {
             canvas_draw_icon(canvas, 4, 19, &I_EviWaiting1_18x21);
         } else {
@@ -105,7 +101,7 @@ static void bc_scanner_draw_callback(Canvas* canvas, void* _model) {
 
     furi_string_free(disp_str);
 }
-*/
+
 
 static bool bc_scanner_input_callback(InputEvent* event, void* context) {
     furi_assert(context);
@@ -124,13 +120,15 @@ static bool bc_scanner_input_callback(InputEvent* event, void* context) {
 }
 
 BarCodeView* bc_scanner_alloc() {
+    FURI_LOG_I(WORKER_TAG, "Start Alloc");
     BarCodeView* bar_code = malloc(sizeof(BarCodeView));
 
     bar_code->view = view_alloc();
     view_allocate_model(bar_code->view, ViewModelTypeLocking, sizeof(BarCodeModel));
     view_set_context(bar_code->view, bar_code);
-    //view_set_draw_callback(bar_code->view, bc_scanner_draw_callback);
+    view_set_draw_callback(bar_code->view, bc_scanner_draw_callback);
     view_set_input_callback(bar_code->view, bc_scanner_input_callback);
+    FURI_LOG_I(WORKER_TAG, "End Alloc");
 
     return bar_code;
 }
@@ -139,14 +137,17 @@ void bc_scanner_free(BarCodeView* bar_code) {
     furi_assert(bar_code);
     view_free(bar_code->view);
     free(bar_code);
+    FURI_LOG_I(WORKER_TAG, "Free");
 }
 
 View* bc_scanner_get_view(BarCodeView* bar_code) {
+    FURI_LOG_I(WORKER_TAG, "Get View");
     furi_assert(bar_code);
     return bar_code->view;
 }
 
 void bc_scanner_set_ok_callback(BarCodeView* bar_code, BarCodeOkCallback callback, void* context) {
+    FURI_LOG_I(WORKER_TAG, "Enter bc_scanner_set_ok_callback");
     furi_assert(bar_code);
     furi_assert(callback);
     with_view_model(
@@ -161,6 +162,7 @@ void bc_scanner_set_ok_callback(BarCodeView* bar_code, BarCodeOkCallback callbac
 }
 
 void bc_scanner_set_file_name(BarCodeView* bar_code, const char* name) {
+    FURI_LOG_I(WORKER_TAG, "bc_scanner_set_file_name");
     furi_assert(name);
     with_view_model(
         bar_code->view,
@@ -170,6 +172,7 @@ void bc_scanner_set_file_name(BarCodeView* bar_code, const char* name) {
 }
 
 void bc_scanner_set_state(BarCodeView* bar_code, BarCodeState* st) {
+    FURI_LOG_I(WORKER_TAG, "bc_scanner_set_state");
     furi_assert(st);
     with_view_model(
         bar_code->view,

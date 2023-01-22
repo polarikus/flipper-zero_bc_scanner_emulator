@@ -1,10 +1,12 @@
 #include "../bc_scanner_app_i.h"
+#include <storage/storage.h>
 
 static bool bc_scanner_file_select(BarCodeApp* bc_app) {
     furi_assert(bc_app);
 
     DialogsFileBrowserOptions browser_options;
     dialog_file_browser_set_basic_options(&browser_options, BC_SCANNER_APP_EXTENSION, &I_bc_10px);
+    browser_options.base_path = BC_SCANNER_APP_PATH_FOLDER;
 
     // Input events and views are managed by file_browser
     bool res = dialog_file_browser_show(
@@ -19,7 +21,7 @@ void bc_scanner_scene_file_select_on_enter(void* context) {
     if(bc_scanner_file_select(bc_app)) {
         scene_manager_next_scene(bc_app->scene_manager, BarCodeAppViewWork);
     } else {
-        scene_manager_previous_scene(bc_app->scene_manager);
+        //scene_manager_previous_scene(bc_app->scene_manager);
         view_dispatcher_stop(bc_app->view_dispatcher);
     }
 }

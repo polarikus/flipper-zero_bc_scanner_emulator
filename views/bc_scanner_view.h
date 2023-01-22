@@ -16,4 +16,4 @@ void bc_scanner_set_ok_callback(BarCodeView* bar_code, BarCodeOkCallback callbac
 
 void bc_scanner_set_file_name(BarCodeView* bar_code, const char* name);
 
-//void bad_usb_set_state(BarCodeView* bad_usb, BarCodeState* st);
+void bc_scanner_set_state(BarCodeView* bar_code, BarCodeState* st);

@@ -3,6 +3,9 @@
 #include <furi_hal.h>
 #include <storage/storage.h>
 #include <lib/toolbox/path.h>
+#define TAG "BarCodeScanner"
+#define WORKER_TAG TAG "App"
+
 static bool bc_scanner_app_custom_event_callback(void* context, uint32_t event) {
     furi_assert(context);
     BarCodeApp* app = context;
@@ -22,12 +25,14 @@ static void bc_scanner_app_tick_event_callback(void* context) {
 }
 
 BarCodeApp* bc_scanner_app_alloc(char* arg) {
+    FURI_LOG_D(WORKER_TAG, "Start AppAlloc");
     BarCodeApp* app = malloc(sizeof(BarCodeApp));
 
     app->file_path = furi_string_alloc();
 
     if(arg && strlen(arg)) {
         furi_string_set(app->file_path, arg);
+        FURI_LOG_D(WORKER_TAG, "File Path Setted");
     }
 
     app->gui = furi_record_open(RECORD_GUI);
@@ -69,6 +74,7 @@ BarCodeApp* bc_scanner_app_alloc(char* arg) {
             scene_manager_next_scene(app->scene_manager, BarCodeSceneFileSelect);
         }
     }
+    FURI_LOG_D(WORKER_TAG, "End AppAlloc");
     return app;
 }
 
@@ -95,9 +101,11 @@ void bc_scanner_app_free(BarCodeApp* app) {
     furi_string_free(app->file_path);
 
     free(app);
+    FURI_LOG_D(WORKER_TAG, "App Free");
 }
 
 int32_t bc_scanner_app(void* p) {
+    FURI_LOG_D(WORKER_TAG, "Start App");
     BarCodeApp* bar_code_app = bc_scanner_app_alloc((char*)p);
 
     view_dispatcher_run(bar_code_app->view_dispatcher);
