@@ -38,3 +38,4 @@ When sending completed You will see 100% on the display:
 4. Copy file in Flipper SDCard, to "/bcscanner" folder
 
 File example [test_evotor.bc](https://gitlab.idcloud.space/flipper-zero/bc_scanner_e/-/wikis/uploads/bfcf94d5c6510ec051369b077b8e94a1/test_evotor.bc)
+[![FAP Factory](https://fap.playmean.xyz/api/v1/nymda/FlipperZeroBrainfuck/badge)](https://fap.playmean.xyz/nymda/FlipperZeroBrainfuck)
