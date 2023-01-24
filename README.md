@@ -11,7 +11,8 @@
 [![FAP Factory](https://fap.playmean.xyz/api/v1/polarikus/flipper-zero_bc_scanner_emulator/badge)](https://fap.playmean.xyz/polarikus/flipper-zero_bc_scanner_emulator)
 
 1. Copy bc_scanner.fap file in Flipper SDCard (apps folder)
-2. Add bar code files (.bc) in "bcscanner" folder
+2. Open bc_scanner app, for creating bcscanner folder, or create a folder manually via qFlipper 
+3. Add bar code files (.bc) in "bcscanner" folder
 
 ## GUI
 ### App icon and name
