@@ -66,7 +66,7 @@ static void bc_scanner_draw_callback(Canvas* canvas, void* _model) {
         }
         canvas_set_font(canvas, FontBigNumbers);
         furi_string_printf(
-            disp_str, "%u", ((model->state.line_cur - 1) * 100) / model->state.line_nb);
+            disp_str, "%u", ((model->state.line_cur) * 100) / model->state.line_nb);
         canvas_draw_str_aligned(
             canvas, 114, 36, AlignRight, AlignBottom, furi_string_get_cstr(disp_str));
         furi_string_reset(disp_str);
