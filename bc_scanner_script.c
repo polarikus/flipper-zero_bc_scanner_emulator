@@ -1,28 +1,21 @@
 #include <furi.h>
 #include <furi_hal.h>
-#include <gui/gui.h>
-#include <input/input.h>
-#include <lib/toolbox/args.h>
 #include <furi_hal_usb_cdc.h>
 #include <storage/storage.h>
 #include "bc_scanner_script.h"
-#include <dolphin/dolphin.h>
 #include "cli/cli_vcp.h"
 #include "cli/cli.h"
 
 #define TAG "BarCodeScanner"
 #define WORKER_TAG TAG "Worker"
-#define FILE_BUFFER_LEN 1
+#define FILE_BUFFER_LEN 50
 
 #define SCRIPT_STATE_ERROR (-1)
 #define SCRIPT_STATE_END (-2)
 #define SCRIPT_STATE_NEXT_LINE (-3)
 
-#define USB_CDC_PKT_LEN CDC_DATA_SZ
-#define USB_UART_RX_BUF_SIZE (USB_CDC_PKT_LEN * 5)
-
-#define USB_CDC_BIT_DTR (1 << 0)
-#define USB_CDC_BIT_RTS (1 << 1)
+#define UART_BAUD 19200
+#define UART_PORT 0
 
 typedef enum {
     WorkerEvtToggle = (1 << 0),
@@ -34,19 +27,10 @@ typedef enum {
 struct BarCodeScript {
     BarCodeState st;
     FuriString* file_path;
-    uint32_t defdelay;
     FuriThread* thread;
     uint8_t file_buf[FILE_BUFFER_LEN];
-    uint8_t buf_start;
     uint8_t buf_len;
-    bool file_end;
-    FuriString* line;
-
-    UartConfig cfg;
-    UartConfig cfg_new;
-
-    FuriString* line_prev;
-    uint32_t repeat_cnt;
+    bool is_file_end;
 };
 
 
@@ -57,7 +41,7 @@ static void usb_uart_serial_init() {
     furi_record_close(RECORD_CLI);
     furi_check(furi_hal_usb_set_config(&usb_cdc_single, NULL) == true);
     furi_hal_console_disable();
-    furi_hal_uart_set_br(FuriHalUartIdUSART1, 19200);
+    furi_hal_uart_set_br(FuriHalUartIdUSART1, UART_BAUD);
 }
 
 static void usb_uart_serial_deinit() {
@@ -69,15 +53,21 @@ static void usb_uart_serial_deinit() {
     furi_hal_console_enable();
 }
 
-static bool bc_script_preload(BarCodeScript* bc_script, File* script_file){
-    bc_script->st.line_nb = 1;
-    UNUSED(script_file);
-    return true;
-}
-
 static bool is_bc_end(const char chr) {
     return ((chr == '\0') || (chr == '\r') || (chr == '\n'));//TODO SPACE NEED???
 }
+
+static uint16_t bc_script_read_file(BarCodeScript* bc_script, File* script_file){
+    UNUSED(is_bc_end);
+    bc_script->st.line_nb = 0;
+    uint16_t ret = storage_file_read(script_file, bc_script->file_buf, FILE_BUFFER_LEN);
+    if(storage_file_eof(script_file)) {
+        bc_script->is_file_end = true;
+    }
+    bc_script->st.line_nb += ret;
+    return ret;
+}
+
 
 static int32_t bc_scanner_worker(void* context){
     BarCodeScript* bc_script = context;
@@ -104,14 +94,18 @@ static int32_t bc_scanner_worker(void* context){
                    furi_string_get_cstr(bc_script->file_path),
                    FSAM_READ,
                    FSOM_OPEN_EXISTING)) {
-                if((bc_script_preload(bc_script, script_file)) && (bc_script->st.line_nb > 0)) {
+               uint64_t size = storage_file_size(script_file);
+               bc_script->st.line_nb = size;
+                if(size > 0) {
                     if(1) { //TODO Check USB Connect
                         worker_state = BarCodeStateIdle; // Ready to run
                     } else {
                         //worker_state = BadUsbStateNotConnected; // USB not connected
                     }
                 } else {
-                    worker_state = BarCodeStateScriptError; // Script preload error
+                    FURI_LOG_E(WORKER_TAG, "File empty error");
+                    worker_state = BarCodeStateFileError;
+                    bc_script->st.error_line = 0;
                 }
             } else {
                 FURI_LOG_E(WORKER_TAG, "File open error");
@@ -130,29 +124,31 @@ static int32_t bc_scanner_worker(void* context){
                 worker_state = BarCodeStateIdle; // Ready to run
             } else if(flags & WorkerEvtToggle) {
                 FURI_LOG_I(WORKER_TAG, "SendUART_MSG");
-                uint16_t ret = 0;
-                 do {
-                    ret = storage_file_read(script_file, bc_script->file_buf, FILE_BUFFER_LEN);
-                    if (is_bc_end((char)bc_script->file_buf[0]))
-                    {
-                        bc_script->st.line_nb++;
-                        break;
-                    }
-                    
-                    furi_hal_cdc_send(0, bc_script->file_buf, FILE_BUFFER_LEN);
-                    furi_delay_ms(10);
-                    if(storage_file_eof(script_file)) {
-                        bc_script->st.line_nb++;
-                        break;
-                    }
-                 }while (ret > 0);
-                 
+                bc_script->st.state = BarCodeStateRunning;
+                bc_script->st.line_cur = 0;
+                furi_delay_ms(500);
+                while(!bc_script->is_file_end){
+                    bc_script->st.state = BarCodeStateRunning;
+                    uint16_t size = bc_script_read_file(bc_script, script_file);
+                    bc_script->st.line_cur = size;
+                    furi_hal_cdc_send(UART_PORT, bc_script->file_buf, size);
+                }
                 worker_state = BarCodeStateIdle;
                 bc_script->st.state = BarCodeStateDone;
                 storage_file_seek(script_file, 0, true);
+                bc_script->is_file_end = false;
                 continue;
             }
             bc_script->st.state = worker_state;
+        }else if(
+            (worker_state == BarCodeStateFileError) ||
+            (worker_state == BarCodeStateScriptError)) { // State: error
+            uint32_t flags = furi_thread_flags_wait(
+                WorkerEvtEnd, FuriFlagWaitAny, FuriWaitForever); // Waiting for exit command
+            furi_check((flags & FuriFlagError) == 0);
+            if(flags & WorkerEvtEnd) {
+                break;
+            }
         }
         
     }

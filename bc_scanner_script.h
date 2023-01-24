@@ -27,12 +27,6 @@ typedef struct {
     char error[64];
 } BarCodeState;
 
-typedef struct {
-    uint8_t vcp_ch;
-    uint8_t baudrate_mode;
-    uint32_t baudrate;
-} UartConfig;
-
 BarCodeScript* bc_scanner_script_open(FuriString* file_path);
 void bc_scanner_script_close(BarCodeScript* bc_script);
 
