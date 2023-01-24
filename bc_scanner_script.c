@@ -33,6 +33,19 @@ struct BarCodeScript {
     bool is_file_end;
 };
 
+static void scan_sound()
+{
+    if(furi_hal_speaker_is_mine() || furi_hal_speaker_acquire(1000)) {
+        float frequency = 4000;
+        furi_hal_speaker_stop();
+        furi_hal_speaker_set_volume(100);
+        furi_hal_speaker_start(frequency, 100);
+        furi_delay_ms(50);
+        furi_hal_speaker_stop();
+        furi_hal_speaker_release();
+    }
+}
+
 
 static void usb_uart_serial_init() {
     furi_hal_usb_unlock();
@@ -126,7 +139,8 @@ static int32_t bc_scanner_worker(void* context){
                 FURI_LOG_I(WORKER_TAG, "SendUART_MSG");
                 bc_script->st.state = BarCodeStateRunning;
                 bc_script->st.line_cur = 0;
-                furi_delay_ms(500);
+                furi_delay_ms(450);
+                scan_sound();
                 while(!bc_script->is_file_end){
                     bc_script->st.state = BarCodeStateRunning;
                     uint16_t size = bc_script_read_file(bc_script, script_file);
