@@ -4,6 +4,12 @@
 static bool bc_scanner_file_select(BarCodeApp* bc_app) {
     furi_assert(bc_app);
 
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    if(!storage_file_exists(storage, BC_SCANNER_APP_PATH_FOLDER)){
+        storage_common_mkdir(storage, BC_SCANNER_APP_PATH_FOLDER);//Make Folder If dir not exist
+    }
+    furi_record_close(RECORD_STORAGE);
+
     DialogsFileBrowserOptions browser_options;
     dialog_file_browser_set_basic_options(&browser_options, BC_SCANNER_APP_EXTENSION, &I_bc_10px);
     browser_options.base_path = BC_SCANNER_APP_PATH_FOLDER;
