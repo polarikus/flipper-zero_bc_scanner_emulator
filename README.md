@@ -11,7 +11,7 @@
 [![FAP Factory](https://fap.playmean.xyz/api/v1/polarikus/flipper-zero_bc_scanner_emulator/badge)](https://fap.playmean.xyz/polarikus/flipper-zero_bc_scanner_emulator)
 
 1. Copy bc_scanner.fap file in Flipper SDCard (apps folder)
-2. Make "/bcscanner" folder in Flipper SDCard 
+2. Open bc_scanner app, for creating bcscanner folder, or create a folder manually via qFlipper 
 3. Add bar code files (.bc) in "bcscanner" folder
 
 ## GUI
@@ -24,11 +24,12 @@ After open app - select bar code to be emulated
 ### Emulation
 1. Click "Run" Button
 
-![Run](https://gitlab.idcloud.space/flipper-zero/bc_scanner_e/-/wikis/uploads/2b6144eebd5e88caa8adc5e0c7514342/Runing.png)
+![Run](https://user-images.githubusercontent.com/59930161/214501072-33a32970-7f1c-4f3b-b6f0-39bb4f2201ce.png)
+![Work](https://user-images.githubusercontent.com/59930161/214501068-ad11e74f-b501-408b-939b-8d2d7748e542.png)
 
 When sending completed You will see 100% on the display:
 
-![End](https://gitlab.idcloud.space/flipper-zero/bc_scanner_e/-/wikis/uploads/676d868d7c377ef9d0f42706bcd83913/EndRun.png)
+![End](https://user-images.githubusercontent.com/59930161/214501074-f567af0c-16d3-4287-81e6-a96ebb6a57f2.png)
 
 2. If you need to resend, click "Run" again 
 3. To exit - press the "Back" button on the flipper

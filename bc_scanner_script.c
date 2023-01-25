@@ -34,6 +34,20 @@ struct BarCodeScript {
 };
 
 
+static void scan_sound()
+{
+    if(furi_hal_speaker_is_mine() || furi_hal_speaker_acquire(1000)) {
+        float frequency = 4000;
+        furi_hal_speaker_stop();
+        furi_hal_speaker_set_volume(100);
+        furi_hal_speaker_start(frequency, 100);
+        furi_delay_ms(50);
+        furi_hal_speaker_stop();
+        furi_hal_speaker_release();
+    }
+}
+
+
 static void usb_uart_serial_init() {
     furi_hal_usb_unlock();
     Cli* cli = furi_record_open(RECORD_CLI);
@@ -105,11 +119,12 @@ static int32_t bc_scanner_worker(void* context){
                 } else {
                     FURI_LOG_E(WORKER_TAG, "File empty error");
                     worker_state = BarCodeStateFileError;
-                    bc_script->st.error_line = 0;
+                    bc_script->st.error_enum = FileIsEmpty;
                 }
             } else {
                 FURI_LOG_E(WORKER_TAG, "File open error");
                 worker_state = BarCodeStateFileError; // File open error
+                bc_script->st.error_enum = FileOpenError;
             }
             bc_script->st.state = worker_state;
         }else if(worker_state == BarCodeStateIdle) { // State: ready to start
@@ -126,7 +141,8 @@ static int32_t bc_scanner_worker(void* context){
                 FURI_LOG_I(WORKER_TAG, "SendUART_MSG");
                 bc_script->st.state = BarCodeStateRunning;
                 bc_script->st.line_cur = 0;
-                furi_delay_ms(500);
+                furi_delay_ms(450);
+                scan_sound();
                 while(!bc_script->is_file_end){
                     bc_script->st.state = BarCodeStateRunning;
                     uint16_t size = bc_script_read_file(bc_script, script_file);

@@ -18,12 +18,18 @@ typedef enum {
     BarCodeStateFileError,
 } BarCodeWorkerState;
 
+typedef enum {
+    FileIsEmpty,
+    FileOpenError
+} FileError;
+
+
 typedef struct {
     BarCodeWorkerState state;
     uint16_t line_cur;
     uint16_t line_nb;
     uint32_t delay_remain;
-    uint16_t error_line;
+    int error_enum;
     char error[64];
 } BarCodeState;
 
