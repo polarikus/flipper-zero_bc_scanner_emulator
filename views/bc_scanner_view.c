@@ -1,5 +1,5 @@
 #include "bc_scanner_view.h"
-#include "../bc_scanner_script.h"
+#include "../bc_scanner_app_i.h"
 #include <gui/elements.h>
 #include <assets_icons.h>
 
@@ -19,6 +19,11 @@ typedef struct {
     uint8_t anim_frame;
 } BarCodeModel;
 
+static char *fileErrors[] = {
+    "File is Empty!",
+    "Can’t open the file"
+};
+
 
 static void bc_scanner_draw_callback(Canvas* canvas, void* _model) {
     BarCodeModel* model = _model;
@@ -30,7 +35,7 @@ static void bc_scanner_draw_callback(Canvas* canvas, void* _model) {
     canvas_draw_str(canvas, 2, 8, furi_string_get_cstr(disp_str));
     furi_string_reset(disp_str);
 
-    canvas_draw_icon(canvas, 22, 20, &I_UsbTree_48x22);
+    canvas_draw_icon(canvas, 4, 22, &I_Scanner_27x37);
 
     if((model->state.state == BarCodeStateIdle) || (model->state.state ==  BarCodeStateDone)) {
         elements_button_center(canvas, "Run");
@@ -39,30 +44,31 @@ static void bc_scanner_draw_callback(Canvas* canvas, void* _model) {
     }
 
     if(model->state.state ==  BarCodeStateFileError) {
-        canvas_draw_icon(canvas, 4, 22, &I_Error_18x18);
+        canvas_draw_icon(canvas, 32, 22, &I_Error_18x18);
         canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str_aligned(canvas, 127, 27, AlignRight, AlignBottom, "File");
-        canvas_draw_str_aligned(canvas, 127, 39, AlignRight, AlignBottom, "ERROR");
+        canvas_draw_str_aligned(canvas, 127, 39, AlignRight, AlignBottom, "File ERROR");
+        canvas_set_font(canvas, FontSecondary);
+        canvas_draw_str_aligned(canvas, 127, 51, AlignRight, AlignBottom, fileErrors[model->state.error_enum]);
     } else if(model->state.state ==  BarCodeStateScriptError) {
-        canvas_draw_icon(canvas, 4, 22, &I_Error_18x18);
+        canvas_draw_icon(canvas, 32, 22, &I_Error_18x18);
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str_aligned(canvas, 127, 33, AlignRight, AlignBottom, "ERROR:");
         canvas_set_font(canvas, FontSecondary);
-        furi_string_printf(disp_str, "line %u", model->state.error_line);
+       //furi_string_printf(disp_str, "line %u", model->state.er);
         canvas_draw_str_aligned(
             canvas, 127, 46, AlignRight, AlignBottom, furi_string_get_cstr(disp_str));
         furi_string_reset(disp_str);
         canvas_draw_str_aligned(canvas, 127, 56, AlignRight, AlignBottom, model->state.error);
     } else if(model->state.state ==  BarCodeStateIdle) {
-        canvas_draw_icon(canvas, 4, 22, &I_Smile_18x18);
+        //canvas_draw_icon(canvas, 4, 22, &I_Smile_18x18);
         canvas_set_font(canvas, FontBigNumbers);
         canvas_draw_str_aligned(canvas, 114, 36, AlignRight, AlignBottom, "0");
         canvas_draw_icon(canvas, 117, 22, &I_Percent_10x14);
     } else if(model->state.state ==  BarCodeStateRunning) {
         if(model->anim_frame == 0) {
-            canvas_draw_icon(canvas, 4, 19, &I_EviSmile1_18x21);
+            canvas_draw_icon(canvas, 32, 24, &I_bc_12x13);
         } else {
-            canvas_draw_icon(canvas, 4, 19, &I_EviSmile2_18x21);
+            canvas_draw_icon(canvas, 32, 27, &I_bc_10px);
         }
         canvas_set_font(canvas, FontBigNumbers);
         furi_string_printf(
@@ -72,16 +78,16 @@ static void bc_scanner_draw_callback(Canvas* canvas, void* _model) {
         furi_string_reset(disp_str);
         canvas_draw_icon(canvas, 117, 22, &I_Percent_10x14);
     } else if(model->state.state ==  BarCodeStateDone) {
-        canvas_draw_icon(canvas, 4, 19, &I_EviSmile1_18x21);
+        //canvas_draw_icon(canvas, 4, 19, &I_EviSmile1_18x21);
         canvas_set_font(canvas, FontBigNumbers);
         canvas_draw_str_aligned(canvas, 114, 36, AlignRight, AlignBottom, "100");
         furi_string_reset(disp_str);
         canvas_draw_icon(canvas, 117, 22, &I_Percent_10x14);
     } else if(model->state.state ==  BarCodeStateDelay) {
         if(model->anim_frame == 0) {
-            canvas_draw_icon(canvas, 4, 19, &I_EviWaiting1_18x21);
+            //canvas_draw_icon(canvas, 4, 19, &I_EviWaiting1_18x21);
         } else {
-            canvas_draw_icon(canvas, 4, 19, &I_EviWaiting2_18x21);
+            //canvas_draw_icon(canvas, 4, 19, &I_EviWaiting2_18x21);
         }
         canvas_set_font(canvas, FontBigNumbers);
         furi_string_printf(
@@ -96,7 +102,7 @@ static void bc_scanner_draw_callback(Canvas* canvas, void* _model) {
             canvas, 127, 46, AlignRight, AlignBottom, furi_string_get_cstr(disp_str));
         furi_string_reset(disp_str);
     } else {
-        canvas_draw_icon(canvas, 4, 22, &I_Clock_18x18);
+        canvas_draw_icon(canvas, 32, 22, &I_Clock_18x18);
     }
 
     furi_string_free(disp_str);

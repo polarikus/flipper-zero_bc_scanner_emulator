@@ -33,6 +33,7 @@ struct BarCodeScript {
     bool is_file_end;
 };
 
+
 static void scan_sound()
 {
     if(furi_hal_speaker_is_mine() || furi_hal_speaker_acquire(1000)) {
@@ -118,11 +119,12 @@ static int32_t bc_scanner_worker(void* context){
                 } else {
                     FURI_LOG_E(WORKER_TAG, "File empty error");
                     worker_state = BarCodeStateFileError;
-                    bc_script->st.error_line = 0;
+                    bc_script->st.error_enum = FileIsEmpty;
                 }
             } else {
                 FURI_LOG_E(WORKER_TAG, "File open error");
                 worker_state = BarCodeStateFileError; // File open error
+                bc_script->st.error_enum = FileOpenError;
             }
             bc_script->st.state = worker_state;
         }else if(worker_state == BarCodeStateIdle) { // State: ready to start
