@@ -18,11 +18,7 @@ typedef enum {
     BarCodeStateFileError,
 } BarCodeWorkerState;
 
-typedef enum {
-    FileIsEmpty,
-    FileOpenError
-} FileError;
-
+typedef enum { FileIsEmpty, FileOpenError } FileError;
 
 typedef struct {
     BarCodeWorkerState state;
@@ -39,8 +35,6 @@ void bc_scanner_script_close(BarCodeScript* bc_script);
 void bc_scanner_script_toggle(BarCodeScript* bc_script);
 
 BarCodeState* bc_scanner_script_get_state(BarCodeScript* bc_script);
-
-
 
 #ifdef __cplusplus
 }

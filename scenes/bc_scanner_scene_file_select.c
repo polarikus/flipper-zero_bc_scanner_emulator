@@ -5,8 +5,8 @@ static bool bc_scanner_file_select(BarCodeApp* bc_app) {
     furi_assert(bc_app);
 
     Storage* storage = furi_record_open(RECORD_STORAGE);
-    if(!storage_file_exists(storage, BC_SCANNER_APP_PATH_FOLDER)){
-        storage_common_mkdir(storage, BC_SCANNER_APP_PATH_FOLDER);//Make Folder If dir not exist
+    if(!storage_file_exists(storage, BC_SCANNER_APP_PATH_FOLDER)) {
+        storage_common_mkdir(storage, BC_SCANNER_APP_PATH_FOLDER); //Make Folder If dir not exist
     }
     furi_record_close(RECORD_STORAGE);
 

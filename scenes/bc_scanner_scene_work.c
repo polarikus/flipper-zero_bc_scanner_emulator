@@ -22,7 +22,8 @@ bool bc_scanner_scene_work_on_event(void* context, SceneManagerEvent event) {
         bc_scanner_script_toggle(app->bc_scanner_script);
         consumed = true;
     } else if(event.type == SceneManagerEventTypeTick) {
-        bc_scanner_set_state(app->bc_scanner_view, bc_scanner_script_get_state(app->bc_scanner_script));
+        bc_scanner_set_state(
+            app->bc_scanner_view, bc_scanner_script_get_state(app->bc_scanner_script));
     }
     return consumed;
 }
@@ -40,7 +41,8 @@ void bc_scanner_scene_work_on_enter(void* context) {
 
     furi_string_free(file_name);
 
-    bc_scanner_set_state(app->bc_scanner_view, bc_scanner_script_get_state(app->bc_scanner_script));
+    bc_scanner_set_state(
+        app->bc_scanner_view, bc_scanner_script_get_state(app->bc_scanner_script));
 
     bc_scanner_set_ok_callback(app->bc_scanner_view, bc_scanner_scene_work_ok_callback, app);
     view_dispatcher_switch_to_view(app->view_dispatcher, BarCodeAppViewWork);

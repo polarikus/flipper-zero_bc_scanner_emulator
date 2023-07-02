@@ -17,6 +17,9 @@
 #define UART_BAUD 19200
 #define UART_PORT 0
 
+/**
+ * 
+ */
 typedef enum {
     WorkerEvtToggle = (1 << 0),
     WorkerEvtEnd = (1 << 1),
@@ -24,6 +27,9 @@ typedef enum {
     WorkerEvtDisconnect = (1 << 3),
 } WorkerEvtFlags;
 
+/**
+ *
+ */
 struct BarCodeScript {
     BarCodeState st;
     FuriString* file_path;
@@ -33,9 +39,10 @@ struct BarCodeScript {
     bool is_file_end;
 };
 
-
-static void scan_sound()
-{
+/**
+ * Speaker scanning sound
+ */
+static void scan_sound() {
     if(furi_hal_speaker_is_mine() || furi_hal_speaker_acquire(1000)) {
         float frequency = 4000;
         furi_hal_speaker_stop();
@@ -47,7 +54,9 @@ static void scan_sound()
     }
 }
 
-
+/**
+ *
+ */
 static void usb_uart_serial_init() {
     furi_hal_usb_unlock();
     Cli* cli = furi_record_open(RECORD_CLI);
@@ -58,6 +67,9 @@ static void usb_uart_serial_init() {
     furi_hal_uart_set_br(FuriHalUartIdUSART1, UART_BAUD);
 }
 
+/**
+ *
+ */
 static void usb_uart_serial_deinit() {
     furi_hal_usb_unlock();
     furi_check(furi_hal_usb_set_config(&usb_cdc_single, NULL) == true);
@@ -66,12 +78,22 @@ static void usb_uart_serial_deinit() {
     furi_record_close(RECORD_CLI);
     furi_hal_console_enable();
 }
-
+/**
+ *
+ * @param chr
+ * @return
+ */
 static bool is_bc_end(const char chr) {
-    return ((chr == '\0') || (chr == '\r') || (chr == '\n'));//TODO SPACE NEED???
+    return ((chr == '\0') || (chr == '\r') || (chr == '\n')); //TODO SPACE NEED???
 }
 
-static uint16_t bc_script_read_file(BarCodeScript* bc_script, File* script_file){
+/**
+ *
+ * @param bc_script
+ * @param script_file
+ * @return
+ */
+static uint16_t bc_script_read_file(BarCodeScript* bc_script, File* script_file) {
     UNUSED(is_bc_end);
     bc_script->st.line_nb = 0;
     uint16_t ret = storage_file_read(script_file, bc_script->file_buf, FILE_BUFFER_LEN);
@@ -82,8 +104,12 @@ static uint16_t bc_script_read_file(BarCodeScript* bc_script, File* script_file)
     return ret;
 }
 
-
-static int32_t bc_scanner_worker(void* context){
+/**
+ * Main worker
+ * @param context
+ * @return
+ */
+static int32_t bc_scanner_worker(void* context) {
     BarCodeScript* bc_script = context;
 
     BarCodeWorkerState worker_state = BarCodeStateInit;
@@ -96,20 +122,18 @@ static int32_t bc_scanner_worker(void* context){
     //uint8_t state = 99;
 
     usb_uart_serial_init();
-    
-    while (1)
-    {
-            //state = furi_hal_cdc_get_ctrl_line_state(FuriHalUartIdUSART1);
-            //FURI_LOG_I(WORKER_TAG, "STATTE: %d", state);
-        if (worker_state == BarCodeStateInit)
-        {
-           if(storage_file_open(
+
+    while(1) {
+        //state = furi_hal_cdc_get_ctrl_line_state(FuriHalUartIdUSART1);
+        //FURI_LOG_I(WORKER_TAG, "STATTE: %d", state);
+        if(worker_state == BarCodeStateInit) {
+            if(storage_file_open(
                    script_file,
                    furi_string_get_cstr(bc_script->file_path),
                    FSAM_READ,
                    FSOM_OPEN_EXISTING)) {
-               uint64_t size = storage_file_size(script_file);
-               bc_script->st.line_nb = size;
+                uint64_t size = storage_file_size(script_file);
+                bc_script->st.line_nb = size;
                 if(size > 0) {
                     if(1) { //TODO Check USB Connect
                         worker_state = BarCodeStateIdle; // Ready to run
@@ -127,7 +151,7 @@ static int32_t bc_scanner_worker(void* context){
                 bc_script->st.error_enum = FileOpenError;
             }
             bc_script->st.state = worker_state;
-        }else if(worker_state == BarCodeStateIdle) { // State: ready to start
+        } else if(worker_state == BarCodeStateIdle) { // State: ready to start
             uint32_t flags = furi_thread_flags_wait(
                 WorkerEvtEnd | WorkerEvtConnect | WorkerEvtToggle,
                 FuriFlagWaitAny,
@@ -143,7 +167,7 @@ static int32_t bc_scanner_worker(void* context){
                 bc_script->st.line_cur = 0;
                 furi_delay_ms(450);
                 scan_sound();
-                while(!bc_script->is_file_end){
+                while(!bc_script->is_file_end) {
                     bc_script->st.state = BarCodeStateRunning;
                     uint16_t size = bc_script_read_file(bc_script, script_file);
                     bc_script->st.line_cur = size;
@@ -156,7 +180,7 @@ static int32_t bc_scanner_worker(void* context){
                 continue;
             }
             bc_script->st.state = worker_state;
-        }else if(
+        } else if(
             (worker_state == BarCodeStateFileError) ||
             (worker_state == BarCodeStateScriptError)) { // State: error
             uint32_t flags = furi_thread_flags_wait(
@@ -166,18 +190,20 @@ static int32_t bc_scanner_worker(void* context){
                 break;
             }
         }
-        
     }
 
     usb_uart_serial_deinit();
     storage_file_close(script_file);
     storage_file_free(script_file);
     FURI_LOG_I(WORKER_TAG, "End");
-    
 
     return 0;
 }
-
+/**
+ * Open bc_scanner script
+ * @param file_path
+ * @return
+ */
 BarCodeScript* bc_scanner_script_open(FuriString* file_path) {
     FURI_LOG_D(WORKER_TAG, "bc_scanner_script_open");
     furi_assert(file_path);
@@ -189,11 +215,16 @@ BarCodeScript* bc_scanner_script_open(FuriString* file_path) {
     bc_script->st.state = BarCodeStateInit;
     bc_script->st.error[0] = '\0';
 
-    bc_script->thread = furi_thread_alloc_ex("BcScannerWorker", 2048, bc_scanner_worker, bc_script);
+    bc_script->thread =
+        furi_thread_alloc_ex("BcScannerWorker", 2048, bc_scanner_worker, bc_script);
     furi_thread_start(bc_script->thread);
     return bc_script;
 } //-V773
 
+/**
+ *
+ * @param bc_script
+ */
 void bc_scanner_script_close(BarCodeScript* bc_script) {
     furi_assert(bc_script);
     furi_thread_flags_set(furi_thread_get_id(bc_script->thread), WorkerEvtEnd);
@@ -204,14 +235,20 @@ void bc_scanner_script_close(BarCodeScript* bc_script) {
     FURI_LOG_D(WORKER_TAG, "bc_scanner_script_close");
 }
 
+/**
+ *
+ * @param bc_script
+ */
 void bc_scanner_script_toggle(BarCodeScript* bc_script) {
     furi_assert(bc_script);
     furi_thread_flags_set(furi_thread_get_id(bc_script->thread), WorkerEvtToggle);
 }
-
+/**
+ *
+ * @param bc_script
+ * @return
+ */
 BarCodeState* bc_scanner_script_get_state(BarCodeScript* bc_script) {
     furi_assert(bc_script);
     return &(bc_script->st);
 }
-
-
