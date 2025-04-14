@@ -4,14 +4,13 @@
 #include <storage/storage.h>
 #include "bc_scanner_script.h"
 #include "cli/cli_vcp.h"
-#include "cli/cli.h"
 
-#define TAG "BarCodeScanner"
-#define WORKER_TAG TAG "Worker"
+#define TAG             "BarCodeScanner"
+#define WORKER_TAG      TAG "Worker"
 #define FILE_BUFFER_LEN 50
 
-#define SCRIPT_STATE_ERROR (-1)
-#define SCRIPT_STATE_END (-2)
+#define SCRIPT_STATE_ERROR     (-1)
+#define SCRIPT_STATE_END       (-2)
 #define SCRIPT_STATE_NEXT_LINE (-3)
 
 #define UART_BAUD 19200
@@ -60,9 +59,9 @@ static void scan_sound() {
  */
 static void usb_uart_serial_init(BarCodeScript* bc_script) {
     furi_hal_usb_unlock();
-    Cli* cli = furi_record_open(RECORD_CLI);
-    cli_session_close(cli);
-    furi_record_close(RECORD_CLI);
+    CliVcp* cli = furi_record_open(RECORD_CLI_VCP);
+    cli_vcp_disable(cli);
+    furi_record_close(RECORD_CLI_VCP);
     furi_check(furi_hal_usb_set_config(&usb_cdc_single, NULL) == true);
 
     bc_script->serial_handle = furi_hal_serial_control_acquire(FuriHalSerialIdUsart);
@@ -76,9 +75,9 @@ static void usb_uart_serial_init(BarCodeScript* bc_script) {
 static void usb_uart_serial_deinit(BarCodeScript* bc_script) {
     furi_hal_usb_unlock();
     furi_check(furi_hal_usb_set_config(&usb_cdc_single, NULL) == true);
-    Cli* cli = furi_record_open(RECORD_CLI);
-    cli_session_open(cli, &cli_vcp);
-    furi_record_close(RECORD_CLI);
+    CliVcp* cli = furi_record_open(RECORD_CLI_VCP);
+    cli_vcp_enable(cli);
+    furi_record_close(RECORD_CLI_VCP);
     furi_hal_serial_deinit(bc_script->serial_handle);
     furi_hal_serial_control_release(bc_script->serial_handle);
 }
