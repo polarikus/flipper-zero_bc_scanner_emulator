@@ -1,3 +1,7 @@
+## v 0.5
+
+- Add android app support 
+
 ## v 0.4
 
 - Update to flipper SDK version 1.3.2
