@@ -7,6 +7,20 @@
 * Manufacturer Name: Flipper Devices Inc.
 * SerialNumber=flip_{Your Flipper name}
 
+## Android companion app (wireless scanning)
+
+There is an Android app that works together with this Flipper app: it connects to your
+FlipperZero over Bluetooth Low Energy (BLE), scans a barcode or QR code with the phone's
+camera, and sends the scanned value to the FlipperZero over the RPC protocol. The Flipper
+app then relays the received value to the target device through the USB COM-port — no SD
+card or `.bc` file required.
+
+- Repository: [flipper-zero_bc_scanner_emulator-Android-app](https://github.com/polarikus/flipper-zero_bc_scanner_emulator-Android-app)
+
+In this mode the app is launched with the `RPC` argument (the Android app does this
+automatically once the FlipperZero is connected). The classic file-based emulation
+described below is still available.
+
 ## Installation
 [Flipper APP Catalog](https://lab.flipper.net/apps/bc_scanner)
 
@@ -41,3 +55,4 @@ When sending completed You will see 100% on the display:
 4. Copy file in Flipper SDCard, to "/bcscanner" folder
 
 File example (change the extension to .bc) [test_evotor.txt](https://github.com/polarikus/flipper-zero_bc_scanner_emulator/files/14998160/test_evotor.txt)
+
