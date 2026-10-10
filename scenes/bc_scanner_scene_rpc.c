@@ -9,8 +9,7 @@
 static void bc_scanner_scene_rpc_render(BarCodeApp* app) {
     furi_assert(app);
     widget_reset(app->widget);
-    widget_add_string_element(
-        app->widget, 64, 0, AlignCenter, AlignTop, FontPrimary, "RPC mode");
+    widget_add_string_element(app->widget, 64, 0, AlignCenter, AlignTop, FontPrimary, "RPC mode");
 
     char buffer[40];
     switch(app->rpc_status) {
